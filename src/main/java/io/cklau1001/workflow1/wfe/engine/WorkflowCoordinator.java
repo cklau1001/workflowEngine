@@ -260,4 +260,20 @@ public class WorkflowCoordinator {
         }
         log.info("[handleHungRequests]: ended");
     }
+
+    public RequestInfo getRequestInfo(String requestId) {
+
+        Optional<RequestInfo> requestInfoOptional = requestDBService.getRequestDetailsByRequestId(requestId);
+
+        return requestInfoOptional.orElseThrow(() -> new IllegalArgumentException(
+                "[getRequestInfo]: No such request, requestId=%s".formatted(requestId)));
+    }
+
+    public RequestEntity.RequestStatus getRequestStatus(String requestId) {
+
+        RequestInfo requestInfo = getRequestInfo(requestId);
+
+        return requestInfo.getRequestStatus();
+    }
+
 }

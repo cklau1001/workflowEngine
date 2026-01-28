@@ -217,4 +217,14 @@ public class RequestDBService {
         return requestEntityRepository.getPayloadByRequestId(requestId);
 
     }
+
+    public Optional<RequestInfo> getRequestDetailsByRequestId(String requestId) {
+        Objects.requireNonNull(requestId, "[getRequestDetailsByRequestId]: requestId cannot be null");
+
+        Optional<RequestEntity> requestEntityOptional = requestEntityRepository.findById(requestId);
+
+        return requestEntityOptional.map(RequestInfo::getInstanceFromRequestEntity).or(Optional::empty);
+
+    }
+
 }
