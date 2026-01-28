@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: workflowEngine
+
+  config:
+    import:
+      - "optional:file:/etc/secret/datasource.yml"
+
+  datasource:
+    # PostgreSQL database below
+    #
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/wfe?currentSchema=wfe_dev
+    driverClassName: org.postgresql.Driver
+
+  #
+  # https://docs.spring.io/spring-boot/how-to/data-initialization.html
+  #
+  jpa:
+    # database-platform: org.hibernate.dialect.H2Dialect
+    # defer-datasource-initialization: true  # To allow H2 create the tables first
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    root: INFO
+    io:
+      cklau1001: INFO
+    org:
+      springframework:
+        amqp: INFO
+      hibernate:
+        engine:
+          transaction: INFO   # Set to DEBUG to show when a TX is committed or rolled back
