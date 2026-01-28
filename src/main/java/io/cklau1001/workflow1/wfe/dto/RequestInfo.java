@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -31,6 +32,8 @@ public class RequestInfo {
 
     public static RequestInfo getInstanceFromMap(Map<String, Object> map) {
 
+        Objects.requireNonNull(map, "[getInstanceFromMap]: map cannot be null");
+
         return RequestInfo.builder()
                 .requestId((String) map.get("requestId"))
                 .workflowName((String) map.get("workflowName"))
@@ -43,6 +46,9 @@ public class RequestInfo {
 
     public static RequestInfo getInstanceFromRequestEntity(RequestEntity requestEntity) {
 
+        Objects.requireNonNull(requestEntity, "[getInstanceFromMap]: requestEntity cannot be null");
+        Objects.requireNonNull(requestEntity.getRequestId(), "[getInstanceFromMap]: requestId cannot be null");
+
         return RequestInfo.builder()
                 .requestId(requestEntity.getRequestId())
                 .workflowName(requestEntity.getWorkflowName())
@@ -52,4 +58,12 @@ public class RequestInfo {
                 .requestStatus(requestEntity.getRequestStatus())
                 .build();
     }
+
+    @Override
+    public String toString() {
+        return "[RequestInfo]: requestId=%s, workflowName=%s, startTime=%s, endTime=%s, requestStatus=%s".formatted(
+                requestId, workflowName, startTime, endTime, requestStatus
+        );
+    }
+
 }

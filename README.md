@@ -61,6 +61,7 @@ Task
 ```java
 
 import io.cklau1001.workflow1.wfe.engine.WorkflowCoordinator;
+import io.cklau1001.workflow1.wfe.model.RequestEntity;
 
 public class MyProject {
 
@@ -69,14 +70,23 @@ public class MyProject {
 
     /**
      * start a new request and WorkflowScheduler can execute the workflow.
-     * 
+     *
      * @param payload : The incoming parameters to the workflow as a Map
      */
     public void newRequest(Map<String, Object> payload) {
-       
+
         String requestId = workflowCoordinator.newRequest("MyProjectWorkflow", payload);
     }
 
+    /**
+     * Get the request status of a given request
+     * 
+     * @param requestId
+     * @return
+     */
+    public RequestEntity.RequestStatus getRequestStatus(String requestId) {
+        return workflowCoordinator.getRequestStatus(requestId);
+    }
 }
 
 
