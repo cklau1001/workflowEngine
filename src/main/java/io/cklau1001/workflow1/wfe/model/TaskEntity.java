@@ -26,7 +26,7 @@ public class TaskEntity extends BaseEntity {
     public enum TaskStatus {
         QUEUED,
         EXECUTING,
-        SUSPENDED,
+        SUSPENDED, // TODO: To be implemented
         RETRY,
         COMPLETED,
         FAILED;

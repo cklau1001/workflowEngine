@@ -27,7 +27,7 @@ public class RequestEntity extends BaseEntity {
     public enum RequestStatus {
         QUEUED,
         EXECUTING,
-        SUSPENDED,
+        SUSPENDED, // TODO: To be implemented
         COMPLETED,
         FAILED
     }

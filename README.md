@@ -55,7 +55,32 @@ Task
 2. Create the task that represents the business logic of that step by implementing the Task interface.
 3. Create the condition on what runtime information have to be evaluated in a branching decision.
 4. Link the condition and the next steps together that forms a transition.
-5. Associate all related transitions back to a step that forms part of the workflow.
+5. Associate all related transitions back to a step that forms part of the workflow that is integrated into spring container using @Bean
+6. After the workflow definition is created, one can start the workflow by the code below.
+
+```java
+
+import io.cklau1001.workflow1.wfe.engine.WorkflowCoordinator;
+
+public class MyProject {
+
+    @Autowored
+    WorkflowCoordinator workflowCoordinator;   // injected into MyProject
+
+    /**
+     * start a new request and WorkflowScheduler can execute the workflow.
+     * 
+     * @param payload : The incoming parameters to the workflow as a Map
+     */
+    public void newRequest(Map<String, Object> payload) {
+       
+        String requestId = workflowCoordinator.newRequest("MyProjectWorkflow", payload);
+    }
+
+}
+
+
+```
 
 # Examples
 The <package>/config/WorkflowConfig illustrates how to define a workflow, particularly
