@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Inherit settings from the default config if needed, or define fresh -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <!-- Set a specific logger to DEBUG level -->
+    <logger name="io.cklau1001" level="DEBUG"/>
+
+    <!-- Set the root logger to INFO by default, or DEBUG if desired -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>
