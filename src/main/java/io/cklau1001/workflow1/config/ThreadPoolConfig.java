@@ -3,12 +3,15 @@ package io.cklau1001.workflow1.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.ExecutorService;
 
 
 @Slf4j
+@EnableAsync
 @Configuration
 public class ThreadPoolConfig {
 
@@ -19,6 +22,7 @@ public class ThreadPoolConfig {
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(5);
         executor.setQueueCapacity(25);
+        // executor.setTaskDecorator(new ContextPropagatingTaskDecorator()); // not to pass trace ID into the thread
         executor.setThreadNamePrefix("WFE-Executor-");
         executor.initialize();
         executor.setWaitForTasksToCompleteOnShutdown(true);

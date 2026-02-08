@@ -26,11 +26,52 @@ spring:
       hibernate:
         format_sql: false
 
+# actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        # include: ["health","prometheus"]
+  otlp:   # opentelemetry
+    metrics:
+      export:
+        url: http://localhost:4318/v1/metrics  # default for metrics
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces  # for trace
+    logging:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/logs # for logs
+  tracing:
+    baggage:
+      remote-fields:  # add requestid as a span attribute
+        - requestid
+      correlation-fields:
+        - requestid
+    sampling:
+      probability: 0.1   # add one out of ten traces to grafana
+
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
 logging:
   level:
     root: INFO
     io:
       cklau1001: INFO
+      micrometer:
+        core:
+          instrument: DEBUG
+      opentelemetry: INFO
     org:
       springframework:
         amqp: INFO

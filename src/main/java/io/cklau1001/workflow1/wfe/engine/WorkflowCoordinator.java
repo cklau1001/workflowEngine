@@ -9,6 +9,9 @@ import io.cklau1001.workflow1.wfe.service.RequestDBService;
 import io.cklau1001.workflow1.wfe.service.TaskDBService;
 import io.cklau1001.workflow1.wfe.service.TaskExecutorDBHelper;
 import io.cklau1001.workflow1.wfe.service.TaskUtil;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.annotation.Observed;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
 import lombok.NonNull;
@@ -41,6 +44,7 @@ public class WorkflowCoordinator {
     private final ObjectProvider<TaskExecutor> taskExecutorProvider;
     private final ExecutorService wfeExecutorService;
     private final TaskUtil taskUtil;
+    private final ObservationRegistry observationRegistry;
 
     /**
      * create a new request
@@ -49,6 +53,7 @@ public class WorkflowCoordinator {
      * @param payload
      * @return
      */
+    @Observed(contextualName = "coordinator.newRequest")
     public String newRequest(String workflowName, Object payload) {
 
         return requestDBService.newRequest(workflowName, payload);
@@ -59,9 +64,11 @@ public class WorkflowCoordinator {
      * A permissitic lock is used so that another JVM can only get the QUEUED requests after this JVM completes.
      *
      */
+    @Observed(contextualName = "coordinator.executeRequests")
     @Transactional
     public void executeRequests() {
 
+        log.info("[coordinator->executeRequests]: entered");
         List<RequestInfo> queueingTasks = requestDBService.findAllPendingRequests(Integer.MAX_VALUE);
 
         for (RequestInfo requestInfo: queueingTasks) {
@@ -81,6 +88,13 @@ public class WorkflowCoordinator {
             Step firstStep = firstStepOptional.get();
             markRequestExecutingStatus(requestInfo.getRequestId(), firstStep);
         }
+
+        /*
+        Observation.createNotStarted("executeRequests", observationRegistry).observe(() -> {
+
+        });
+
+         */
 
     }
 
@@ -195,7 +209,7 @@ public class WorkflowCoordinator {
         for (TaskInfo taskInfo: pendingTasks) {
             log.info("[executeTasks]: Executing task, taskInfo=[{}]", taskInfo);
             TaskExecutor taskExecutor = taskExecutorProvider.getObject(taskExecutorDBHelper,
-                    workflowRegistry, taskInfo, taskUtil);
+                    workflowRegistry, taskInfo, taskUtil, observationRegistry);
             log.debug("[executeTasks]: taskExecutor={}", taskExecutor);
 
             /*
@@ -261,6 +275,7 @@ public class WorkflowCoordinator {
         log.info("[handleHungRequests]: ended");
     }
 
+    @Observed(contextualName = "coordinator.getRequestInfo")
     public RequestInfo getRequestInfo(String requestId) {
 
         Optional<RequestInfo> requestInfoOptional = requestDBService.getRequestDetailsByRequestId(requestId);

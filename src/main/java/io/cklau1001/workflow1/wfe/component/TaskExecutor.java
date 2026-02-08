@@ -4,6 +4,9 @@ import io.cklau1001.workflow1.wfe.dto.TaskInfo;
 import io.cklau1001.workflow1.wfe.engine.WorkflowRegistry;
 import io.cklau1001.workflow1.wfe.service.TaskExecutorDBHelper;
 import io.cklau1001.workflow1.wfe.service.TaskUtil;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.annotation.Observed;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.NonNull;
@@ -27,21 +30,26 @@ import java.util.concurrent.Callable;
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Getter
 // @Setter
-public final class TaskExecutor implements ITaskExecutor, Callable<TaskResult> {
+public class TaskExecutor implements ITaskExecutor, Callable<TaskResult> {
 
     private final TaskExecutorDBHelper taskExecutorDBHelper;
     private final WorkflowRegistry workflowRegistry;
     private final TaskInfo taskInfo;
     private final TaskUtil taskUtil;
+    private final ObservationRegistry observationRegistry;
 
 
     public TaskExecutor(TaskExecutorDBHelper taskExecutorDBHelper,
-                        WorkflowRegistry workflowRegistry, TaskInfo taskInfo, TaskUtil taskUtil) {
+                        WorkflowRegistry workflowRegistry,
+                        TaskInfo taskInfo,
+                        TaskUtil taskUtil,
+                        ObservationRegistry observationRegistry) {
 
         this.taskExecutorDBHelper = taskExecutorDBHelper;
         this.workflowRegistry = workflowRegistry;
         this.taskInfo = taskInfo;
         this.taskUtil = taskUtil;
+        this.observationRegistry = observationRegistry;
 
     }
 
@@ -51,6 +59,21 @@ public final class TaskExecutor implements ITaskExecutor, Callable<TaskResult> {
         return taskExecutorDBHelper.getContext(taskInfo.getTaskId());
     }
 
+    public TaskResult call() throws Exception {
+
+        /*
+           create a new trace ID
+         */
+        return Observation.createNotStarted("taskexecutor.call", observationRegistry)
+                .highCardinalityKeyValue("requestid", taskInfo.getRequestId())
+                //.highCardinalityKeyValue("taskid", taskInfo.getTaskId())
+                //.highCardinalityKeyValue("taskname", taskInfo.getTaskName())
+                //.highCardinalityKeyValue("workflow", taskInfo.getWorkflowName())
+                //.contextualName("taskexecutor." + taskInfo.getTaskName() + "-" + taskInfo.getTaskId())
+                 .observeChecked(this::actualcall);
+                //.observeChecked(() -> new TaskResult());
+
+    }
     /**
      * Trigger the actual task, which is also the entry
      * The method is called inside a worker thread. Any exception message cannot be printed out. Need log.error() to
@@ -59,7 +82,7 @@ public final class TaskExecutor implements ITaskExecutor, Callable<TaskResult> {
      * The task should have executing status
      *
      */
-    public TaskResult call() throws Exception {
+    public TaskResult actualcall() throws Exception {
 
         log.info("[call]: entered: {}", taskInfo);
 
@@ -96,6 +119,7 @@ public final class TaskExecutor implements ITaskExecutor, Callable<TaskResult> {
 
     }
 
+    @Observed(contextualName = "taskexecutor.createRuntimeContext")
     public void createRuntimeContext(@NonNull Task task, @NonNull Context context) {
 
         PollableConfig pollableConfig;

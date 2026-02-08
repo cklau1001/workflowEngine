@@ -1,5 +1,7 @@
 package io.cklau1001.workflow1.wfe.engine;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -20,27 +22,31 @@ import java.io.IOException;
 public class WorkflowScheduler {
 
     private final WorkflowCoordinator workflowCoordinator;
+    private final ObservationRegistry observationRegistry;
 
     @Scheduled(fixedDelay = 30000)
     public void invoke() throws Exception {
 
-        log.info(">>>>>>>>>> [invoke]: {}: START", Thread.currentThread().getName());
-        log.info("[invoke]: {}: scan any pending QUEUED requests", Thread.currentThread().getName());
-        // move QUEUED requests to EXECUTING
-        workflowCoordinator.executeRequests();
+        Observation.createNotStarted("scheduler.job", observationRegistry).observe(() -> {
+            log.info(">>>>>>>>>> [invoke]: {}: START", Thread.currentThread().getName());
+            log.info("[invoke]: {}: scan any pending QUEUED requests", Thread.currentThread().getName());
+            // move QUEUED requests to EXECUTING
+            workflowCoordinator.executeRequests();
 
-        log.info("[invoke]: {}: execute any QUEUED / RETRY tasks", Thread.currentThread().getName());
-        // executing tasks
-        workflowCoordinator.executeTasks();
+            log.info("[invoke]: {}: execute any QUEUED / RETRY tasks", Thread.currentThread().getName());
+            // executing tasks
+            workflowCoordinator.executeTasks();
 
-        log.info("[invoke]: {}: scan any completed requests", Thread.currentThread().getName());
-        // Mark completed or Failed on request
-        workflowCoordinator.finalizeRequests();
+            log.info("[invoke]: {}: scan any completed requests", Thread.currentThread().getName());
+            // Mark completed or Failed on request
+            workflowCoordinator.finalizeRequests();
 
-        log.info("[invoke]: {}: handle any hung requests", Thread.currentThread().getName());
-        workflowCoordinator.handleHungRequests();
+            log.info("[invoke]: {}: handle any hung requests", Thread.currentThread().getName());
+            workflowCoordinator.handleHungRequests();
 
-        log.info("<<<<<<<<<<<< [invoke]: {}: END.", Thread.currentThread().getName());
+            log.info("<<<<<<<<<<<< [invoke]: {}: END.", Thread.currentThread().getName());
+
+        });
 
     }
 }
