@@ -5,9 +5,11 @@ import io.cklau1001.workflow1.wfe.component.Task;
 import io.cklau1001.workflow1.wfe.component.TaskResult;
 import io.cklau1001.workflow1.wfe.model.TaskEntity;
 import io.cklau1001.workflow1.wfe.service.TaskUtil;
+import io.micrometer.observation.annotation.Observed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
 
@@ -22,16 +24,17 @@ public class BookTicket implements Task {
         return "BookTicketTask";
     }
 
+    @Observed(contextualName = "BookTicket.execute")
     @Override
     public TaskResult execute(Context context, TaskUtil taskUtil) {
 
         Map<String, Object> ctx = context.getCtx();
-        if (!ctx.containsKey("filmdate") || !ctx.containsKey("filmtime") || !ctx.containsKey("cinema")) {
+        if (!ctx.containsKey("filmtime") || !ctx.containsKey("cinema")) {
             return TaskResult.getInstance(context.getTaskId(), TaskEntity.TaskStatus.FAILED, "Please provide date, time and place to reserve tickets");
         }
 
-        String filmdate = (String) ctx.get("filmdate");
-        String filmtime = (String) ctx.get("filmtime");
+        // String filmdate = (String) ctx.get("filmdate");
+        LocalDateTime filmtime =  LocalDateTime.parse((String) ctx.get("filmtime"));
         String cinema = (String) ctx.get("cinema");
 
         boolean canReserveTicket = random.nextBoolean();
@@ -41,7 +44,6 @@ public class BookTicket implements Task {
         // pass the following information to next step
         Map<String, Object> passingmap = Map.of(
                 "passing", Map.of("canReserveTicket", canReserveTicket,
-                        "filmdate", filmdate,
                         "filmtime", filmtime,
                         "cinema", cinema
                         )
@@ -49,8 +51,8 @@ public class BookTicket implements Task {
 
         context.setPassingMap(passingmap);
 
-        log.info("[BookTicket->execute]: canReserveTicket={}, requestId={}, taskId={}",
-                canReserveTicket, context.getRequestId(), context.getTaskId());
+        log.info("[BookTicket->execute]: canReserveTicket={}, filetime={}, requestId={}, taskId={}",
+                canReserveTicket, filmtime, context.getRequestId(), context.getTaskId());
         return TaskResult.getInstance(context.getTaskId(), TaskEntity.TaskStatus.COMPLETED,
                 "ticket booked at cinema=[%s]".formatted(cinema));
     }

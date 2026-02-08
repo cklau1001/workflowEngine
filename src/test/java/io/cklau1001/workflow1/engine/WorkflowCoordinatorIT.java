@@ -17,6 +17,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,11 +84,9 @@ public class WorkflowCoordinatorIT {
         payload.put("drink", "coke");
          */
 
-        payload.put("filmdate", "2026-01-27");
-        payload.put("filmtime", "05:30 PM");
+        payload.put("filmtime", LocalDateTime.parse("2026-02-01T17:00:00"));
         payload.put("cinema", "cinema1");
-        payload.put("mealdate", "2026-01-27");
-        payload.put("mealtime", "08:00 PM");
+        payload.put("mealtime", LocalDateTime.parse("2026-02-01T19:00:00"));
         payload.put("restaurant", "restaurant1");
 
         // String requestId = workflowCoordinator.newRequest("workflow-1", payload);

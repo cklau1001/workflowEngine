@@ -25,7 +25,6 @@ public class TaskUtil {
     private final RequestDBService requestDBService;
     private final TaskDBService taskDBService;
 
-    private static ObjectMapper objectMapper = new ObjectMapper();
 
     public Context getContextByTaskName(String requestId, String taskName) throws IOException {
         return taskDBService.getContextByRequestIdAndTaskName(requestId, taskName);
@@ -33,6 +32,11 @@ public class TaskUtil {
 
     public TaskEntity.TaskStatus getTaskStatusByTaskName(String requestId, String taskName) {
         return taskDBService.getTaskStatusByRequestIdAndTaskName(requestId, taskName);
+    }
+
+    public void setRequestRemark(String requestId, String remark) {
+
+        requestDBService.setRemark(requestId, remark);
     }
 
 }

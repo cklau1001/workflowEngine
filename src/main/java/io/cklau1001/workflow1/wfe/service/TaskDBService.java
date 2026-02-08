@@ -44,8 +44,7 @@ public class TaskDBService {
     private final RequestDBService requestDBService;
     private final TaskEntityRepository taskEntityRepository;
     private final EntityManager entityManager;
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * Create a new task for a given requestId and step

@@ -6,6 +6,7 @@ import io.cklau1001.workflow1.wfe.component.*;
 import io.cklau1001.workflow1.wfe.dto.TaskInfo;
 import io.cklau1001.workflow1.wfe.engine.WorkflowRegistry;
 import io.cklau1001.workflow1.wfe.model.TaskEntity;
+import io.micrometer.observation.annotation.Observed;
 import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -40,10 +41,11 @@ public class TaskExecutorDBHelper {
     @Transactional
     public void failTask(@NonNull TaskInfo taskInfo, @NonNull Context context, @NonNull String errorMessage, String output) {
 
-        log.info("[failTask]: entered: requestId={}, taskId={}, context={}",
-                taskInfo.getRequestId(), taskInfo.getTaskId(), context);
+        log.info("[failTask]: entered: requestId={}, taskId={}, errorMessage={} context={}",
+                taskInfo.getRequestId(), taskInfo.getTaskId(), errorMessage, context.showCtx());
 
         String finalOutput = output == null || output.isEmpty() ? errorMessage : output + "\n" + errorMessage;
+
         taskDBService.markFailed(taskInfo.getTaskId(), finalOutput);
         requestDBService.markFailed(taskInfo.getRequestId(), errorMessage);
 
@@ -153,6 +155,7 @@ public class TaskExecutorDBHelper {
         return taskDBService.getContext(taskId);
     }
 
+    @Observed(contextualName = "TaskExecutorDBHelper.processTaskResult")
     @Transactional
     public TaskResult processTaskResult(TaskInfo taskInfo, Task currentTask ,TaskResult result, Context context) {
 
@@ -163,7 +166,7 @@ public class TaskExecutorDBHelper {
         switch (result.getTaskStatus()) {
             case COMPLETED -> completeTask(taskInfo ,context, output);
             case RETRY -> retryTask(taskInfo ,context, workflowRegistry.getPollableConfig(currentTask).orElse(new PollableConfig()), output);
-            case FAILED -> failTask(taskInfo ,context, context.get("error", String.class), output);
+            case FAILED -> failTask(taskInfo ,context, output, "");
         };
 
         // Derive the list of next steps, if any

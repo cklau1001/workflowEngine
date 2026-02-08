@@ -11,8 +11,7 @@ public class IsTicketBought implements Condition {
 
     @Override
     public boolean evaluate(Context context) {
-        boolean canReserveTicket = context.getOrDefault("canReserveTicket", Boolean.class, false);
+        return context.getOrDefault("canReserveTicket", Boolean.class, false);
 
-        return canReserveTicket;
     }
 }

@@ -97,4 +97,23 @@ The <package>/config/WorkflowConfig illustrates how to define a workflow, partic
 - **bookTicketProcess** shows how to use TernaryTransition to route to next step based on a boolean condition of ReserveTicket
 - **makeHamburgerProcess** shows how to define a task that can be retried ( Pollable )
 
-
+# OpenTelemetry
+This project also publishes telemetry data (Metrics, Traces and Logs) to OTel receivers (e.g. Alloy / Jaeger) that can be visualized from a dashboard like Grafana.
+It demonstrates the following features:
+- How to expose metrics, traces and logs by defining related settings in application.yml
+- How to create a new Observation (metrics and traces) in each method. When using @Observed, it only works when the method is not called by the owning class due to rule of
+  spring proxy self-invocation.
+- When a task is invoked from a thread, it is better to have its own trace id and span, instead of inheriting the one from scheduling thread. A span attribute (requestid) is defined
+  so that one can get all traces related to that requestid.
+- One can easily try the openTelemetry feature by the following docker compose file below:
+```yml
+ services:
+   grafana-lgtm:
+     image: 'grafana/otel-lgtm:latest'
+     ports:
+       - '3000:3000' # UI
+       - '4317:4317'
+       - '4318:4318'
+     environment:
+       - ENABLE_LOGS_ALL=true
+```

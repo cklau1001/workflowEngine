@@ -13,6 +13,7 @@ import io.cklau1001.workflow1.wfe.engine.WorkflowDefinition;
 import io.cklau1001.workflow1.wfe.engine.WorkflowRegistry;
 import io.cklau1001.workflow1.wfe.model.RequestEntity;
 import io.cklau1001.workflow1.wfe.repository.RequestEntityRepository;
+import io.micrometer.observation.annotation.Observed;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
@@ -42,8 +43,9 @@ public class RequestDBService {
 
     private final RequestEntityRepository requestEntityRepository;
     private final WorkflowRegistry workflowRegistry;
+    private final ObjectMapper objectMapper;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    // private static final ObjectMapper objectMapper = new ObjectMapper();
 
 
     public void markFailed(String requestId, String remark) {
@@ -88,7 +90,7 @@ public class RequestDBService {
      * @param workflowName
      * @return
      */
-
+    @Observed(contextualName = "RequestDBService.newRequest")
     public String newRequest(String workflowName, Object payload) {
 
         Objects.requireNonNull(workflowName, "[newRequest]: workflowName is null");
@@ -133,6 +135,7 @@ public class RequestDBService {
      *
      * @return
      */
+    @Observed(contextualName = "requestDBService.findAllPendingRequests")
     @Transactional
     public List<RequestInfo> findAllPendingRequests(int rowsToFetch) {
 
@@ -218,6 +221,7 @@ public class RequestDBService {
 
     }
 
+    @Observed(contextualName = "RequestDBService.getRequestDetailsByRequestId")
     public Optional<RequestInfo> getRequestDetailsByRequestId(String requestId) {
         Objects.requireNonNull(requestId, "[getRequestDetailsByRequestId]: requestId cannot be null");
 
@@ -227,4 +231,18 @@ public class RequestDBService {
 
     }
 
+    public void setRemark(String requestId, String remark) {
+
+        Objects.requireNonNull(requestId, "[setRemark]: requestId is null");
+        Objects.requireNonNull(remark, "[setRemark]: remark is null");
+
+        Optional<RequestEntity> requestEntityOptional = findRequestEntityByRequestId(requestId);
+        RequestEntity requestEntity = requestEntityOptional.orElseThrow(() ->
+                new IllegalArgumentException("[setRemark]: No such request, requestId=%s"
+                        .formatted(requestId)));
+
+        requestEntity.setRemark(remark);
+        requestEntityRepository.save(requestEntity);
+
+    }
 }
